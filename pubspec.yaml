@@ -1,0 +1,44 @@
+name: absence
+description: "A new Flutter project."
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.12.1
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Face verification — on-device FaceNet (TFLite) + SQLite embedding store
+  face_verification: ^0.3.7
+
+  # MLKit face detection — used directly for liveness check + face capture guidance
+  google_mlkit_face_detection: ^0.13.2
+
+  # Camera
+  camera: ^0.11.0
+
+  # GPS
+  geolocator: ^13.0.0
+
+  # Runtime permissions
+  permission_handler: ^11.3.1
+
+  # Download reference photo
+  dio: ^5.7.0
+
+  # Cache directory
+  path_provider: ^2.1.4
+  path: ^1.9.0
+
+  # API calls
+  http: ^1.2.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
