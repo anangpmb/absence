@@ -136,7 +136,7 @@ class CheckinController extends ChangeNotifier {
     } on LocationPermissionDeniedException catch (e) {
       _fail('Location access required: ${e.reason}');
     } catch (e) {
-      _fail('Unexpected error. Please try again.');
+      _fail('Unexpected error. Please try again. $e');
       debugPrint('CheckinController.startCheckin: $e');
     }
   }

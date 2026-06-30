@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import '../controllers/checkin_controller.dart';
 import '../models/employee_model.dart';
+import '../widgets/permission_consent_dialog.dart';
 import 'face_capture_page.dart';
 import 'home_page.dart';
 import 'liveness_check_page.dart';
@@ -89,6 +91,23 @@ class _CheckinPageState extends State<CheckinPage> {
     if (mounted) await widget.controller.completeCapture(photoPath);
   }
 
+  Future<void> _onStartCheckinPressed() async {
+    final locationStatus = await Permission.location.status;
+    final cameraStatus = await Permission.camera.status;
+
+    if (!mounted) return;
+
+    if (locationStatus.isGranted && cameraStatus.isGranted) {
+      widget.controller.startCheckin(widget.employee);
+      return;
+    }
+
+    await PermissionConsentDialog.show(
+      context,
+      () => widget.controller.startCheckin(widget.employee),
+    );
+  }
+
   void _navigateToHome() {
     final result = widget.controller.result;
     if (result == null) return;
@@ -135,9 +154,7 @@ class _CheckinPageState extends State<CheckinPage> {
               ],
               const SizedBox(height: 40),
               FilledButton.icon(
-                onPressed: isLoading
-                    ? null
-                    : () => widget.controller.startCheckin(widget.employee),
+                onPressed: isLoading ? null : _onStartCheckinPressed,
                 icon: isLoading
                     ? const SizedBox.square(
                         dimension: 18,
