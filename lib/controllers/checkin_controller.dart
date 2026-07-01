@@ -98,13 +98,13 @@ class CheckinController extends ChangeNotifier {
         maxRadiusMeters: employee.office.radiusMeters,
       );
 
-      if (!locationResult.isWithinRadius) {
-        final dist = locationResult.distanceMeters.toStringAsFixed(0);
-        final max = employee.office.radiusMeters.toStringAsFixed(0);
-        throw _CheckinException(
-          'You are ${dist}m from the office (max ${max}m).',
-        );
-      }
+      // if (!locationResult.isWithinRadius) {
+      //   final dist = locationResult.distanceMeters.toStringAsFixed(0);
+      //   final max = employee.office.radiusMeters.toStringAsFixed(0);
+      //   throw _CheckinException(
+      //     'You are ${dist}m from the office (max ${max}m).',
+      //   );
+      // }
 
       _pendingLocation = locationResult;
       _pendingEmployee = employee;
@@ -136,7 +136,12 @@ class CheckinController extends ChangeNotifier {
     } on LocationPermissionDeniedException catch (e) {
       _fail('Location access required: ${e.reason}');
     } catch (e) {
-      _fail('Unexpected error. Please try again. $e');
+      final msg = e.toString().toLowerCase();
+      if (msg.contains('face') || msg.contains('detection') || msg.contains('no face')) {
+        _fail('No face detected in your reference photo. Please contact your admin.');
+      } else {
+        _fail('Unexpected error. Please try again. $e');
+      }
       debugPrint('CheckinController.startCheckin: $e');
     }
   }

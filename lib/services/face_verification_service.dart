@@ -26,6 +26,10 @@ class FaceVerificationService {
     required String employeeId,
     String? employeeName,
   }) async {
+    // The package's registerFromImagePath throws when a record with the same
+    // id+imageId already exists, even when replace:true is passed — the guard
+    // fires before the upsert. Delete first so retries always succeed.
+    await FaceVerification.instance.deleteFaceRecord(employeeId, 'reference_photo');
     await FaceVerification.instance.registerFromImagePath(
       id: employeeId,
       imagePath: referencePhotoPath,

@@ -146,7 +146,8 @@ class _LivenessCheckPageState extends State<LivenessCheckPage>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _camera?.dispose();
+    _camera?.dispose(); // no-op if already released via _releaseCamera
+    _camera = null;
     _detector.close();
     _flashCtrl.dispose();
     super.dispose();
@@ -203,7 +204,7 @@ class _LivenessCheckPageState extends State<LivenessCheckPage>
           .difference(_challengeStart ?? DateTime.now())
           .inSeconds;
       if (elapsed >= widget.challengeTimeoutSeconds) {
-        await _camera?.stopImageStream();
+        await _releaseCamera();
         if (mounted) Navigator.of(context).pop(false);
         return;
       }
@@ -266,6 +267,14 @@ class _LivenessCheckPageState extends State<LivenessCheckPage>
     }
   }
 
+  Future<void> _releaseCamera() async {
+    final cam = _camera;
+    if (cam == null) return;
+    _camera = null;
+    if (cam.value.isStreamingImages) await cam.stopImageStream();
+    await cam.dispose();
+  }
+
   Future<void> _passChallenge() async {
     _challengeComplete = true;
 
@@ -277,8 +286,8 @@ class _LivenessCheckPageState extends State<LivenessCheckPage>
     final isLast = _currentIndex >= _challenges.length - 1;
 
     if (isLast) {
-      // All done — success
-      await _camera?.stopImageStream();
+      // Release hardware before the next page opens the same camera
+      await _releaseCamera();
       if (mounted) Navigator.of(context).pop(true);
     } else {
       // Move to next challenge
@@ -353,14 +362,13 @@ class _LivenessCheckPageState extends State<LivenessCheckPage>
   }
 
   Widget _buildCamera(CameraController cam) {
-    final size = MediaQuery.of(context).size;
     final challenge = _challenges[_currentIndex];
 
     return Stack(
       fit: StackFit.expand,
       children: [
         // Full-screen camera preview
-        _FullScreenCameraPreview(controller: cam, screenSize: size),
+        _FullScreenCameraPreview(controller: cam),
 
         // Success flash overlay
         AnimatedBuilder(
@@ -421,22 +429,25 @@ class _LivenessCheckPageState extends State<LivenessCheckPage>
 // ---------------------------------------------------------------------------
 
 class _FullScreenCameraPreview extends StatelessWidget {
-  const _FullScreenCameraPreview({
-    required this.controller,
-    required this.screenSize,
-  });
+  const _FullScreenCameraPreview({required this.controller});
 
   final CameraController controller;
-  final Size screenSize;
 
   @override
   Widget build(BuildContext context) {
-    return OverflowBox(
-      maxWidth: screenSize.width,
-      maxHeight: screenSize.height,
-      child: AspectRatio(
-        aspectRatio: controller.value.aspectRatio,
-        child: CameraPreview(controller),
+    final previewSize = controller.value.previewSize;
+    if (previewSize == null) return const SizedBox.expand();
+
+    return ClipRect(
+      child: SizedBox.expand(
+        child: FittedBox(
+          fit: BoxFit.cover,
+          child: SizedBox(
+            width: previewSize.height,
+            height: previewSize.width,
+            child: CameraPreview(controller),
+          ),
+        ),
       ),
     );
   }

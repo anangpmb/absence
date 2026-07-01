@@ -221,16 +221,18 @@ class _FaceCapturePageState extends State<FaceCapturePage>
   }
 
   Widget _buildCamera(CameraController cam) {
-    final size = MediaQuery.of(context).size;
-
     return Stack(
       fit: StackFit.expand,
       children: [
         // Full-screen preview
-        _CameraPreviewFill(controller: cam, screenSize: size),
+        _CameraPreviewFill(controller: cam),
 
         // Head outline guide with dimmed surround
         _HeadGuideOverlay(faceDetected: _faceDetected),
+
+        // White shutter overlay hides the camera black-out that occurs between
+        // stopImageStream() and the page pop when takePicture() is in progress.
+        if (_capturing) const ColoredBox(color: Colors.white),
 
         // Top bar
         SafeArea(
@@ -341,14 +343,14 @@ class _HeadSilhouettePainter extends CustomPainter {
       )
       // Right cheek → right jaw → chin
       ..cubicTo(
-        right, top + h * 0.70,
-        cx + w * 0.28, bottom - h * 0.04,
+        right, top + h * 0.72,
+        cx + w * 0.43, bottom - h * 0.08,
         cx, bottom,
       )
       // Chin → left jaw → left cheek
       ..cubicTo(
-        cx - w * 0.28, bottom - h * 0.04,
-        left, top + h * 0.70,
+        cx - w * 0.43, bottom - h * 0.08,
+        left, top + h * 0.72,
         left, top + h * 0.42,
       )
       // Left temple → crown
@@ -520,22 +522,31 @@ class _BottomPanel extends StatelessWidget {
 // ---------------------------------------------------------------------------
 
 class _CameraPreviewFill extends StatelessWidget {
-  const _CameraPreviewFill({
-    required this.controller,
-    required this.screenSize,
-  });
+  const _CameraPreviewFill({required this.controller});
 
   final CameraController controller;
-  final Size screenSize;
 
   @override
   Widget build(BuildContext context) {
-    return OverflowBox(
-      maxWidth: screenSize.width,
-      maxHeight: screenSize.height,
-      child: AspectRatio(
-        aspectRatio: controller.value.aspectRatio,
-        child: CameraPreview(controller),
+    // FittedBox lays its child out with unconstrained BoxConstraints, so
+    // CameraPreview's internal AspectRatio widget would receive no bounded
+    // dimension and size itself to 0×0 — producing a black preview.
+    // Fix: give CameraPreview a concrete portrait SizedBox (previewSize is
+    // landscape-native on Android, so swap width↔height), then let
+    // FittedBox.cover scale it to fill the screen. ClipRect removes overflow.
+    final previewSize = controller.value.previewSize;
+    if (previewSize == null) return const SizedBox.expand();
+
+    return ClipRect(
+      child: SizedBox.expand(
+        child: FittedBox(
+          fit: BoxFit.cover,
+          child: SizedBox(
+            width: previewSize.height,
+            height: previewSize.width,
+            child: CameraPreview(controller),
+          ),
+        ),
       ),
     );
   }

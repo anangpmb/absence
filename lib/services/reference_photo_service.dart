@@ -21,7 +21,7 @@ class ReferencePhotoService {
   }) async {
     final cachedFile = await _getCachedFile(employeeId);
 
-    if (await _isCacheValid(cachedFile)) {
+    if (await _isCacheValid(cachedFile, photoUrl)) {
       return cachedFile.path;
     }
 
@@ -41,8 +41,11 @@ class ReferencePhotoService {
     return File(path.join(cacheDir.path, 'ref_face_$employeeId.jpg'));
   }
 
-  Future<bool> _isCacheValid(File file) async {
+  Future<bool> _isCacheValid(File file, String url) async {
     if (!await file.exists()) return false;
+    final urlFile = File('${file.path}.url');
+    if (!await urlFile.exists()) return false;
+    if (await urlFile.readAsString() != url) return false;
     final age = DateTime.now().difference(await file.lastModified());
     return age.inHours < _cacheDurationHours;
   }
@@ -56,6 +59,7 @@ class ReferencePhotoService {
       if (!await destinationFile.exists()) {
         throw ReferencePhotoException('File not saved to cache after download.');
       }
+      await File('${destinationFile.path}.url').writeAsString(url);
       return destinationFile.path;
     } on DioException catch (e) {
       throw ReferencePhotoException('Download failed: ${e.message}');
