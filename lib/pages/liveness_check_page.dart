@@ -373,7 +373,7 @@ class _LivenessCheckPageState extends State<LivenessCheckPage>
         // Success flash overlay
         AnimatedBuilder(
           animation: _flashOpacity,
-          builder: (_, _) => Opacity(
+          builder: (_, __) => Opacity(
             opacity: _flashOpacity.value * 0.4,
             child: const ColoredBox(color: Colors.green),
           ),

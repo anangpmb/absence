@@ -428,7 +428,7 @@ class _CountdownIndicatorState extends State<_CountdownIndicator>
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: _ctrl,
-      builder: (_, _) => SizedBox.square(
+      builder: (_, __) => SizedBox.square(
         dimension: 40,
         child: CircularProgressIndicator(
           value: _ctrl.value,

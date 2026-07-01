@@ -55,10 +55,10 @@ class _RootState extends State<_Root> {
   final EmployeeModel _employee = EmployeeModel(
     id: '1',
     name: 'Anang Pambudi',
-    referencePhotoUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRSrsimUFsYDrVr2Je8gg0NjeMgkKgps2Wn7OW6UTaogQ&s=10',
+    referencePhotoUrl: 'https://ucarecdn.com/fe444a28-6a45-4c53-a708-a6103b5c1cfa/-/preview/750x1000/',
     office: const OfficeLocation(
-      lat: -6.985997,   // Jakarta — replace with your office lat
-      lng: 110.4130644,  // Replace with your office lng
+      lat: -7.1281543,   // Jakarta — replace with your office lat
+      lng: 110.3910645,  // Replace with your office lng
       radiusMeters: 500,
     ),
   );
