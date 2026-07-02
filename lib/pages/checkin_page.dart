@@ -152,6 +152,11 @@ class _CheckinPageState extends State<CheckinPage> {
                 const SizedBox(height: 12),
                 _ErrorBanner(message: controller.errorMessage!),
               ],
+              if (controller.similarityScore != null &&
+                  controller.status == CheckinStatus.failed) ...[
+                const SizedBox(height: 8),
+                _SimilarityBanner(score: controller.similarityScore!),
+              ],
               const SizedBox(height: 40),
               FilledButton.icon(
                 onPressed: isLoading ? null : _onStartCheckinPressed,
@@ -266,6 +271,42 @@ class _ErrorBanner extends StatelessWidget {
         message,
         textAlign: TextAlign.center,
         style: TextStyle(color: Colors.red.shade700),
+      ),
+    );
+  }
+}
+
+class _SimilarityBanner extends StatelessWidget {
+  const _SimilarityBanner({required this.score});
+  final double score;
+
+  @override
+  Widget build(BuildContext context) {
+    final pct = (score * 100).toStringAsFixed(1);
+    final threshold = (0.70 * 100).toStringAsFixed(0);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.orange.shade50,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.orange.shade200),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            'Face similarity',
+            style: TextStyle(color: Colors.orange.shade800, fontSize: 13),
+          ),
+          Text(
+            '$pct% (min $threshold%)',
+            style: TextStyle(
+              color: Colors.orange.shade800,
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
       ),
     );
   }

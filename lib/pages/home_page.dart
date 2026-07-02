@@ -133,6 +133,14 @@ class _InfoCard extends StatelessWidget {
                   '${result.distanceMeters.toStringAsFixed(0)} m  '
                   '(max ${result.officeRadiusMeters.toStringAsFixed(0)} m)',
             ),
+            if (result.similarityScore != null) ...[
+              const Divider(height: 24),
+              _InfoRow(
+                icon: Icons.face_outlined,
+                label: 'Face Match',
+                value: '${(result.similarityScore! * 100).toStringAsFixed(1)}%',
+              ),
+            ],
           ],
         ),
       ),

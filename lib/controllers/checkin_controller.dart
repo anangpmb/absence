@@ -69,6 +69,10 @@ class CheckinController extends ChangeNotifier {
   String? errorMessage;
   CheckinResult? result;
 
+  /// Cosine similarity score from the last verification attempt, null if not
+  /// yet attempted. Available on both success and failed states.
+  double? similarityScore;
+
   /// Available when status == awaitingLiveness or awaitingVerification.
   CameraDescription? pendingCamera;
 
@@ -178,18 +182,20 @@ class CheckinController extends ChangeNotifier {
     _setStatus(CheckinStatus.submitting, 'Verifying face...');
 
     try {
-      final matchedId = await faceVerificationService.verifyPhoto(
+      final verifyResult = await faceVerificationService.verifyPhoto(
         photoPath: photoPath,
         employeeId: _pendingEmployee!.id,
       );
 
-      if (matchedId == null) {
+      similarityScore = verifyResult.similarityScore;
+
+      if (!verifyResult.isMatch) {
         _fail('Face not recognized. Ensure good lighting and try again.');
         return;
       }
 
       _setStatus(CheckinStatus.submitting, 'Saving attendance...');
-      await _submitToApi();
+      // await _submitToApi();
 
       result = CheckinResult(
         employeeName: _pendingEmployee!.name,
@@ -198,13 +204,14 @@ class CheckinController extends ChangeNotifier {
         lng: _pendingLocation!.currentLng,
         distanceMeters: _pendingLocation!.distanceMeters,
         officeRadiusMeters: _pendingEmployee!.office.radiusMeters,
+        similarityScore: verifyResult.similarityScore,  // double?
       );
 
       _setStatus(CheckinStatus.success, 'Check-in successful!');
     } on _CheckinException catch (e) {
       _fail(e.message);
     } catch (e) {
-      _fail('Verification failed. Please try again.');
+      _fail('Verification failed. Please try again. $e');
       debugPrint('CheckinController.completeCapture: $e');
     }
   }
@@ -214,6 +221,7 @@ class CheckinController extends ChangeNotifier {
     statusMessage = 'Ready to check in';
     errorMessage = null;
     result = null;
+    similarityScore = null;
     pendingCamera = null;
     _pendingLocation = null;
     _pendingEmployee = null;
